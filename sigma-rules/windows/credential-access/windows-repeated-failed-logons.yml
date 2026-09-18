@@ -1,0 +1,28 @@
+title: Multiple Windows Failed Logon Attempts
+id: 8a4e2f31-4625-4b7d-9c20-002fa1ed0a02
+status: experimental
+description: Detects multiple Windows failed logon events from the same source within a short time window.
+author: Ananthan D
+date: 2026/09/18
+
+correlation:
+  type: event_count
+  rules:
+    - 7f2c9d1e-4625-4a6b-9f31-001fa1ed0a01
+  group-by:
+    - Source_Network_Address
+  timespan: 5m
+  condition:
+    gte: 5
+
+level: medium
+
+falsepositives:
+  - Users repeatedly entering incorrect passwords
+  - Misconfigured services
+  - Scheduled tasks using outdated credentials
+  - Legitimate administrative troubleshooting
+
+tags:
+  - attack.credential_access
+  - attack.t1110

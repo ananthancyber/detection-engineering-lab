@@ -1,0 +1,5 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4625
+| bin _time span=5m
+| stats count dc(Account_Name) as unique_accounts values(Account_Name) as targeted_accounts values(Logon_Type) as logon_types by _time, Source_Network_Address, host
+| where count >= 5
+| sort - count

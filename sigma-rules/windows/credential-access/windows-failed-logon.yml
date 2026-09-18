@@ -1,0 +1,28 @@
+title: Windows Failed Logon Attempt
+id: 7f2c9d1e-4625-4a6b-9f31-001fa1ed0a01
+status: experimental
+description: Detects failed Windows authentication attempts recorded by Security Event ID 4625.
+author: Ananthan D
+date: 2026/09/18
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4625
+  condition: selection
+
+falsepositives:
+  - Incorrect user password
+  - User entering an invalid username
+  - Expired or locked account
+  - Misconfigured services
+  - Legitimate administrative activity
+
+level: low
+
+tags:
+  - attack.credential_access
+  - attack.t1110
