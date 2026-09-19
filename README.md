@@ -1,511 +1,693 @@
 # Project 04 — Detection Engineering Lab
 
-[![Platform](https://img.shields.io/badge/Platform-Splunk%20Cloud-black?logo=splunk)](https://www.splunk.com/)
-[![Endpoint](https://img.shields.io/badge/Endpoint-Windows%2010-blue?logo=windows)](https://www.microsoft.com/windows)
-[![Detection Format](https://img.shields.io/badge/Detection-Sigma-orange)](https://sigmahq.io/)
-[![Focus](https://img.shields.io/badge/Focus-Detection%20Engineering-red)](https://attack.mitre.org/)
-[![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)](https://github.com/ananthancyber)
+> A hands-on detection engineering laboratory focused on building, validating, and documenting security detections using real Windows security telemetry, Splunk Cloud, Sigma rules, SPL, and MITRE ATT&CK.
 
-## Project Overview
-
-This project is a hands-on **Detection Engineering Lab** designed to simulate how security analysts create, test, validate, and improve detections in a Security Information and Event Management system.
-
-The project uses **Windows Security Event Logs**, **Splunk Cloud**, **Splunk Universal Forwarder**, **Sigma rules**, **Splunk Processing Language (SPL)**, and **MITRE ATT&CK mapping** to build a practical detection engineering workflow.
-
-The main objective is to convert security events into meaningful detections that can support Security Operations Center activities such as alert triage, investigation, threat hunting, and incident response.
+![Detection Engineering](https://img.shields.io/badge/Focus-Detection%20Engineering-blue)
+![SIEM](https://img.shields.io/badge/SIEM-Splunk%20Cloud-orange)
+![Sigma](https://img.shields.io/badge/Rules-Sigma-red)
+![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-Mapped-blue)
+![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)
 
 ---
 
-## Project Objectives
+## Overview
 
-- Collect Windows Security Event Logs from a Windows endpoint.
-- Forward endpoint telemetry to Splunk Cloud.
-- Understand important Windows Security Event IDs.
-- Create detection rules using the Sigma format.
-- Convert detection logic into Splunk SPL queries.
-- Simulate suspicious activities in a controlled lab environment.
-- Validate whether detections identify the expected activity.
-- Identify and reduce false positives.
-- Map detections to MITRE ATT&CK techniques.
-- Document the complete detection engineering lifecycle.
-- Build a portfolio project that demonstrates practical SOC and blue-team skills.
+This project is a practical **Detection Engineering Lab** designed to simulate how security detections are developed and validated in a SOC environment.
 
----
+Instead of relying only on predefined SIEM alerts, the project follows a detection engineering workflow:
 
-## Detection Engineering Workflow
-
-```text
-Attack or Suspicious Activity
-            ↓
-Windows Security Event Logs
-            ↓
-Splunk Universal Forwarder
-            ↓
-Splunk Cloud
-            ↓
-SPL Search
-            ↓
-Sigma Detection Rule
-            ↓
-Validation and Investigation
-            ↓
+~~~text
+Security Telemetry
+       ↓
+Event Analysis
+       ↓
+Baseline Establishment
+       ↓
+Detection Logic
+       ↓
+Sigma Rule
+       ↓
+SPL Query
+       ↓
+Controlled Validation
+       ↓
+Evidence Collection
+       ↓
 MITRE ATT&CK Mapping
-            ↓
-Detection Improvement
-```
+       ↓
+Documentation
+~~~
+
+The laboratory uses **Windows Security Event Logs collected through Splunk Universal Forwarder and analyzed in Splunk Cloud**.
+
+Detection logic is implemented using both:
+
+- **Sigma** for portable detection rules
+- **Splunk SPL** for SIEM-specific detection queries
+
+Each detection is validated against real telemetry or a controlled test scenario before being documented.
 
 ---
 
-## Lab Environment
+# Objectives
 
-| Component | Details |
+The primary objectives of this project are to:
+
+- Build practical detection engineering skills
+- Analyze Windows security telemetry
+- Understand Windows Event IDs relevant to SOC investigations
+- Establish behavioral baselines before writing detections
+- Develop Sigma detection rules
+- Develop Splunk SPL queries
+- Validate detections using controlled security scenarios
+- Map detections to MITRE ATT&CK techniques
+- Identify potential false positives
+- Collect reproducible evidence
+- Document detections in a professional SOC-oriented format
+- Build a portfolio demonstrating practical blue-team capabilities
+
+---
+
+# Lab Environment
+
+## Host Environment
+
+| Component | Configuration |
 |---|---|
-| Host Operating System | Windows 11 |
-| Monitored Endpoint | Windows 10 Client VM |
-| SIEM Platform | Splunk Cloud |
-| Log Collection Agent | Splunk Universal Forwarder 10.4.3 |
-| Log Source | Windows Security Event Log |
-| Splunk Index | `main` |
-| Sourcetype | `WinEventLog:Security` |
-| Forwarding Port | `9997` over SSL |
-| Detection Format | Sigma |
-| Query Language | Splunk Processing Language |
-| Framework | MITRE ATT&CK |
+| Host OS | Windows 11 |
+| Virtualization | VMware Workstation |
+| SIEM | Splunk Cloud |
+| Log Collection | Splunk Universal Forwarder |
+
+## Virtual Lab
+
+| System | Role |
+|---|---|
+| Windows Server | Active Directory Domain Controller |
+| Windows 10 | Domain Client / Detection Endpoint |
+| Kali Linux | Security Testing / Attack Simulation |
+| Ubuntu | Supporting Security Infrastructure |
+
+## Windows Environment
+
+~~~text
+Domain: corp.local
+
+Domain Controller:
+AD-DC.corp.local
+
+Windows Client:
+WIN10-CLIENT
+~~~
 
 ---
 
-## Tools and Technologies
+# Detection Engineering Workflow
 
-- **Splunk Cloud** — Log indexing, searching, investigation, and detection testing
-- **Splunk Universal Forwarder** — Endpoint log collection and forwarding
-- **Windows 10** — Monitored endpoint
-- **PowerShell** — Endpoint verification and security event generation
-- **Sigma** — Vendor-neutral detection rule format
-- **SPL** — Splunk search and detection queries
-- **MITRE ATT&CK** — Adversary behavior and technique mapping
-- **Git and GitHub** — Version control and project documentation
-- **Visual Studio Code** — Rule development and documentation
+Each detection follows a repeatable engineering process.
+
+## 1. Identify Telemetry
+
+Determine which Windows event source contains the required security information.
+
+Examples:
+
+- Windows Security Event Logs
+- Process Creation Events
+- Authentication Events
+- Command-Line Telemetry
+
+## 2. Analyze the Event
+
+Understand:
+
+- Event ID
+- Important fields
+- Account information
+- Source information
+- Process information
+- Command-line information
+- Parent process
+- Host information
+
+## 3. Establish a Baseline
+
+Before creating a detection, normal activity is analyzed.
+
+This helps distinguish:
+
+- Common legitimate activity
+- Administrative activity
+- Security tooling
+- Suspicious behavior
+- Rare or anomalous patterns
+
+## 4. Develop Detection Logic
+
+Detection logic is implemented using:
+
+- Sigma
+- Splunk SPL
+
+## 5. Validate
+
+The detection is tested against:
+
+- Existing telemetry
+- Historical events
+- Controlled test activity
+
+## 6. Collect Evidence
+
+Relevant Splunk results, rules, queries, and validation results are captured as evidence.
+
+## 7. Map to MITRE ATT&CK
+
+Detections are mapped to relevant ATT&CK techniques and sub-techniques.
+
+## 8. Document
+
+Each detection receives:
+
+- Detection description
+- Technical logic
+- Validation result
+- Evidence
+- MITRE mapping
+- Quantified outcome
 
 ---
 
-## Windows Security Events Investigated
+# Current Detection Coverage
 
-### Event ID 4624 — Successful Logon
+The project currently contains **3 detection rules** covering authentication and PowerShell execution activity.
 
-Event ID `4624` represents a successful account logon.
+| Rule | Detection | Windows Event | MITRE ATT&CK | Severity |
+|---|---|---:|---|---|
+| 001 | Windows Failed Logon Attempt | 4625 | T1110 | Low |
+| 002 | Multiple Windows Failed Logon Attempts | 4625 | T1110 | Medium |
+| 003 | PowerShell Encoded Command Execution | 4688 | T1059.001 | Medium |
 
-It can support investigations involving:
-
-- User authentication
-- Remote logons
-- Suspicious account access
-- Possible account compromise
-- Lateral movement
-
-Example SPL query:
-
-```spl
-index=main sourcetype="WinEventLog:Security" EventCode=4624
-```
+> Severity represents the current detection design and is not intended to determine whether an observed event is malicious without investigation.
 
 ---
 
-### Event ID 4625 — Failed Logon
+# Detection 001 — Windows Failed Logon Attempt
 
-Event ID `4625` represents a failed account logon.
+## Objective
 
-It can support detections involving:
+Detect Windows authentication failures using **Security Event ID 4625**.
 
-- Brute-force attempts
-- Password spraying
-- Incorrect password attempts
-- Suspicious authentication activity
-- Repeated failed access attempts
+## Detection Concept
 
-Example SPL query:
+Repeated authentication failures can be relevant to credential-access investigations.
 
-```spl
-index=main sourcetype="WinEventLog:Security" EventCode=4625
-```
+The detection focuses on failed logon telemetry and extracts fields such as:
+
+- Account name
+- Account domain
+- Source network address
+- Logon type
+- Host
+
+## Sigma Rule
+
+~~~text
+sigma-rules/windows/credential-access/windows-failed-logon.yml
+~~~
+
+## Splunk Query
+
+~~~text
+splunk-queries/authentication/failed-logon-4625.spl
+~~~
+
+The detection query groups failed authentication activity by relevant account and source fields to support investigation.
+
+## Validation
+
+The dataset contained:
+
+- 36 failed-logon events analyzed
+- Source IP and account information available for investigation
+- Multiple authentication failures identified
+
+The rule was validated against actual Windows Security telemetry.
+
+## MITRE ATT&CK
+
+**T1110 — Brute Force**
+
+The detection provides telemetry relevant to investigating repeated authentication failures and potential credential-access activity.
 
 ---
 
-### Event ID 4688 — Process Creation
+# Detection 002 — Multiple Windows Failed Logons
 
-Event ID `4688` represents the creation of a new process.
+## Objective
 
-It can support investigations involving:
+Identify repeated failed authentication attempts occurring within a short time window.
 
-- Suspicious command execution
-- PowerShell activity
-- Script execution
-- Malware execution
-- Living-off-the-land techniques
-- Unusual parent-child process relationships
+## Detection Logic
 
-Example SPL query:
+The detection groups Event ID 4625 events by source address within a **5-minute window**.
 
-```spl
-index=main sourcetype="WinEventLog:Security" EventCode=4688
-```
+The current threshold is:
+
+~~~text
+5 or more failed logon events within 5 minutes
+~~~
+
+## Sigma Rule
+
+~~~text
+sigma-rules/windows/credential-access/windows-repeated-failed-logons.yml
+~~~
+
+## Splunk Query
+
+~~~text
+splunk-queries/authentication/repeated-failed-logons-5min.spl
+~~~
+
+## Validation Results
+
+The detection identified:
+
+- 3 matching five-minute windows
+- Maximum of 10 failed-logon events within a window
+- 28 events across the matching windows
+- 2 targeted accounts in the observed matching activity
+
+The observed source included:
+
+~~~text
+::1
+~~~
+
+This represents the IPv6 loopback address and therefore the observed activity was treated as **authentication activity requiring investigation**, rather than automatically classified as a confirmed attack.
+
+## MITRE ATT&CK
+
+**T1110 — Brute Force**
+
+The detection provides a behavioral layer above individual failed authentication events.
 
 ---
 
-## Project Structure
+# Detection 003 — PowerShell Encoded Command Execution
 
-```text
+## Objective
+
+Detect PowerShell process creation where the command line contains encoded-command execution indicators.
+
+## Windows Telemetry
+
+The detection uses:
+
+**Event ID 4688 — Process Creation**
+
+Important fields observed during analysis included:
+
+- `New_Process_Name`
+- `Process_Command_Line`
+- `Creator_Process_Name`
+- `Creator_Process_ID`
+- `New_Process_ID`
+- `Account_Name`
+- `Account_Domain`
+- `Token_Elevation_Type`
+- `Mandatory_Label`
+- `Logon_ID`
+
+## Baseline Analysis
+
+The process creation dataset contained:
+
+- **11,956** Event ID 4688 events
+- **369** unique process/parent-process combinations
+- **2,673** unique process/command-line/parent combinations
+- **402** PowerShell-related events
+- **31** distinct PowerShell process/command-line combinations
+
+The baseline analysis was important because PowerShell activity was also observed from legitimate administrative and security tooling.
+
+Therefore, the detection does not treat every PowerShell execution as malicious.
+
+---
+
+## Suspicious PowerShell Pattern
+
+The initial search looked for command-line indicators such as:
+
+~~~text
+-EncodedCommand
+-enc
+DownloadString
+IEX
+Invoke-Expression
+~~~
+
+The initial baseline returned:
+
+~~~text
+0 matching events
+~~~
+
+This established a clean baseline before performing the controlled validation.
+
+---
+
+## Controlled Validation
+
+A harmless PowerShell encoded-command test was executed on the Windows client.
+
+The test generated:
+
+- Event ID 4688
+- `powershell.exe`
+- Account: `alice`
+- Host: `WIN10-CLIENT`
+- Command line containing `-EncodedCommand`
+
+The resulting event was successfully collected by Splunk and detected by the final SPL query.
+
+## Detection Result
+
+~~~text
+1 controlled test event
+1 detected event
+100% controlled-test detection
+~~~
+
+The test payload was benign and was used only to validate detection telemetry.
+
+---
+
+## Sigma Rule
+
+~~~text
+sigma-rules/windows/execution/windows-powershell-encoded-command.yml
+~~~
+
+## Splunk Query
+
+~~~text
+splunk-queries/process-creation/powershell-encoded-command.spl
+~~~
+
+## MITRE ATT&CK
+
+**T1059.001 — Command and Scripting Interpreter: PowerShell**
+
+The detection focuses on PowerShell execution behavior containing encoded-command indicators.
+
+Encoded PowerShell is treated as a suspicious indicator requiring investigation rather than automatically being classified as malicious.
+
+---
+
+# Detection Engineering Metrics
+
+Current project results:
+
+| Metric | Result |
+|---|---:|
+| Detection Rules | 3 |
+| SPL Detection Queries | 3 |
+| Validation Reports | 3 |
+| MITRE ATT&CK Techniques | 2 |
+| Windows Event IDs Analyzed | 2 |
+| Failed Logon Events Analyzed | 36 |
+| Matching Repeated-Failure Windows | 3 |
+| Maximum Failures in Matching Window | 10 |
+| Events Across Matching Windows | 28 |
+| Process Creation Events Analyzed | 11,956 |
+| Unique Process/Parent Combinations | 369 |
+| Unique Process/Command-Line/Parent Combinations | 2,673 |
+| PowerShell Events Analyzed | 402 |
+| PowerShell Process/Command-Line Combinations | 31 |
+| Controlled Encoded PowerShell Tests | 1 |
+| Controlled Test Events Detected | 1 |
+
+---
+
+# MITRE ATT&CK Coverage
+
+Current detection coverage includes:
+
+| Technique | Name | Detection |
+|---|---|---|
+| T1110 | Brute Force | Failed logon detections |
+| T1059.001 | Command and Scripting Interpreter: PowerShell | Encoded PowerShell detection |
+
+MITRE coverage documentation is maintained in:
+
+~~~text
+mitre-coverage/
+~~~
+
+---
+
+# Repository Structure
+
+~~~text
 Project-04-Detection-Engineering-Lab/
 │
 ├── docs/
 │   ├── Day01.md
 │   ├── Day02.md
 │   ├── Day03.md
-│   └── ...
+│   └── Day04.md
 │
 ├── mitre-coverage/
-│   ├── attack-mapping.md
-│   └── coverage-matrix.csv
-│
-├── screenshots/
-│   ├── Day01/
-│   ├── Day02/
-│   │   ├── Day02-01-Windows-Version.png
-│   │   ├── Day02-02-Windows-Event-Log-Service.png
-│   │   ├── Day02-03-Windows-Firewall-Status.png
-│   │   ├── Day02-04-Administrator-Access.png
-│   │   ├── Day02-05-Windows-Host-Network-Info.png
-│   │   ├── Day02-06-Network-Connectivity.png
-│   │   ├── Day02-07-Universal-Forwarder-Installed.png
-│   │   ├── Day02-08-HEC-Token-Created.png
-│   │   ├── Day02-09-Windows-Security-Logs-in-Splunk.png
-│   │   ├── Day02-10-Failed-Logon-Event-4625.png
-│   │   ├── Day02-11-Successful-Logon-Events-4624.png
-│   │   └── Day02-12-Process-Creation-Events-4688.png
-│   └── ...
+│   ├── day03-authentication-detections.md
+│   └── day04-process-creation-detection.md
 │
 ├── sigma-rules/
-│   ├── windows/
-│   │   ├── credential-access/
-│   │   ├── persistence/
-│   │   ├── lateral-movement/
-│   │   └── execution/
-│   └── README.md
+│   └── windows/
+│       ├── credential-access/
+│       │   ├── windows-failed-logon.yml
+│       │   └── windows-repeated-failed-logons.yml
+│       │
+│       └── execution/
+│           └── windows-powershell-encoded-command.yml
 │
 ├── splunk-queries/
 │   ├── authentication/
-│   ├── process-creation/
-│   └── README.md
+│   │   ├── failed-logon-4625.spl
+│   │   └── repeated-failed-logons-5min.spl
+│   │
+│   └── process-creation/
+│       └── powershell-encoded-command.spl
 │
 ├── validation/
 │   ├── rule-001-validation.md
 │   ├── rule-002-validation.md
-│   └── false-positive-analysis.md
+│   └── rule-003-validation.md
+│
+├── screenshots/
+│   ├── Day03/
+│   └── Day04/
 │
 ├── LICENSE
 └── README.md
-```
-
-> Additional files and folders will be added as the project progresses.
+~~~
 
 ---
 
-## Work Completed
+# Evidence & Documentation
 
-### Day 01 — Project and SIEM Preparation
+The project maintains evidence for each detection rather than documenting only the final rule.
 
-- Created the project repository.
-- Prepared the project folder structure.
-- Prepared the Splunk Cloud environment.
-- Reviewed the purpose of Splunk Cloud and Universal Forwarder.
-- Established the initial detection engineering workflow.
+Evidence includes:
 
-Documentation:
+- Splunk searches
+- Event analysis
+- Baseline results
+- Detection results
+- Sigma rules
+- SPL queries
+- Controlled test results
+- MITRE ATT&CK mappings
+- Validation reports
 
-- [Day 01 Documentation](docs/Day01.md)
+Daily documentation is available under:
 
----
+~~~text
+docs/
+~~~
 
-### Day 02 — Windows Security Log Ingestion and Validation
+Validation documentation is available under:
 
-- Verified the Windows endpoint.
-- Verified the Windows Event Log service.
-- Verified Windows Firewall status.
-- Verified administrator access.
-- Verified network connectivity.
-- Verified Splunk Universal Forwarder installation.
-- Installed the Splunk Cloud credentials package.
-- Verified the active forwarding destination.
-- Confirmed Windows Security logs were indexed in Splunk Cloud.
-- Tested Event IDs `4624`, `4625`, and `4688`.
-- Captured technical evidence.
-- Documented the completed work.
+~~~text
+validation/
+~~~
 
-Documentation:
+Detection coverage is available under:
 
-- [Day 02 Documentation](docs/Day02.md)
+~~~text
+mitre-coverage/
+~~~
 
-Evidence:
+Screenshots and supporting evidence are maintained under:
 
-- [Day 02 Screenshots](screenshots/Day02/)
-
----
-
-## Evidence and Validation
-
-The project includes screenshots and documentation showing:
-
-- Windows endpoint preparation
-- Splunk Universal Forwarder installation
-- Universal Forwarder service status
-- Splunk Cloud configuration
-- Windows Security log ingestion
-- Successful logon events
-- Failed logon events
-- Process creation events
-- SPL search results
-- Detection rule testing
-- Validation results
-
-Evidence is organized by project day to make the workflow easy to review.
+~~~text
+screenshots/
+~~~
 
 ---
 
-## Planned Detection Scenarios
+# Skills Demonstrated
 
-The following detection scenarios are planned for the upcoming project stages:
+## Security Monitoring
 
-| Detection Scenario | Relevant Data | Planned Status |
-|---|---|---|
-| Repeated failed logons | Event ID `4625` | Planned |
-| Suspicious successful logon after failures | Event IDs `4625` and `4624` | Planned |
-| Suspicious process creation | Event ID `4688` | Planned |
-| Suspicious PowerShell execution | Process creation logs | Planned |
-| Potential lateral movement | Logon and process events | Planned |
-| Persistence-related activity | Windows security telemetry | Planned |
-| False-positive analysis | Detection results | Planned |
-| MITRE ATT&CK mapping | Detection techniques | Planned |
-
----
-
-## Detection Rule Development Methodology
-
-Each detection will follow the same development process:
-
-```text
-1. Understand the attack behavior
-2. Identify the required Windows event logs
-3. Identify relevant fields and Event IDs
-4. Write the Sigma rule
-5. Create the matching SPL query
-6. Simulate or identify the activity
-7. Execute the SPL query in Splunk
-8. Verify the result
-9. Review false positives
-10. Improve the detection
-11. Map the detection to MITRE ATT&CK
-12. Document the evidence
-```
-
----
-
-## Example Sigma Rule Format
-
-A future detection rule will follow the Sigma structure below:
-
-```yaml
-title: Example Windows Security Detection
-id: example-detection-id
-status: experimental
-description: Detects a suspicious Windows security event.
-author: Ananthan D
-date: 2026/09/16
-logsource:
-  product: windows
-  service: security
-detection:
-  selection:
-    EventID: 4625
-  condition: selection
-falsepositives:
-  - Legitimate user authentication failures
-level: medium
-tags:
-  - attack.credential_access
-```
-
-> This is an example structure for learning and documentation. Production rules will be created and validated during the project.
-
----
-
-## Example SPL Query Format
-
-A future detection query will be stored in the `splunk-queries/` folder.
-
-Example:
-
-```spl
-index=main
-sourcetype="WinEventLog:Security"
-EventCode=4625
-| stats count by Account_Name, src, host
-| sort - count
-```
-
-The query will be tested and refined based on the available fields and actual event data.
-
----
-
-## MITRE ATT&CK Integration
-
-The project will map relevant detections to MITRE ATT&CK techniques.
-
-Potential technique areas include:
-
-- Credential Access
-- Discovery
-- Execution
-- Persistence
-- Lateral Movement
-- Defense Evasion
-
-The mapping will be based on the behavior detected by each rule and will be documented in:
-
-```text
-mitre-coverage/attack-mapping.md
-```
-
----
-
-## Skills Demonstrated
-
-This project demonstrates practical experience in:
-
-- SIEM log ingestion
 - Windows Security Event Log analysis
-- Splunk Cloud
-- Splunk Universal Forwarder
-- SPL query development
-- Sigma rule creation
-- Detection engineering
-- Security event investigation
 - Authentication monitoring
-- Process monitoring
-- Threat detection
-- False-positive analysis
-- MITRE ATT&CK mapping
-- Technical documentation
-- Git and GitHub version control
-- SOC analyst workflow
+- Process creation monitoring
+- PowerShell telemetry analysis
+- Command-line analysis
 
----
+## Detection Engineering
 
-## Troubleshooting Experience
+- Detection logic development
+- Behavioral baselining
+- Threshold-based detection
+- Pattern-based detection
+- False-positive consideration
+- Controlled detection validation
 
-### Universal Forwarder Had No Active Forward
+## SIEM
 
-Initially, the Universal Forwarder showed no active forwarding destination.
+- Splunk Cloud
+- Splunk SPL
+- Event filtering
+- Statistical aggregation
+- Time-window analysis
+- Field-based investigation
 
-The issue was resolved by installing the Splunk Cloud credentials package and restarting the Universal Forwarder service.
+## Detection-as-Code
 
-### Splunk Cloud Credentials Package Was Not Found in Downloads
+- Sigma
+- Structured detection rules
+- Detection rule versioning
+- Repository-based rule organization
 
-The `.spl` package was not available in the normal Downloads folder.
+## Threat Detection
 
-The file was located in the Universal Forwarder application directory:
+- Credential-access monitoring
+- Brute-force-related activity detection
+- PowerShell execution monitoring
+- Encoded PowerShell detection
 
-```text
-C:\Program Files\SplunkUniversalForwarder\etc\apps\splunkcloud\splunkclouduf.spl
-```
+## Threat Frameworks
 
-The package was installed from its actual location.
+- MITRE ATT&CK
+- T1110 — Brute Force
+- T1059.001 — PowerShell
 
----
+## Documentation
 
-## Current Project Status
-
-```text
-Project Status: In Progress
-
-Completed:
-- Project structure
-- Splunk Cloud preparation
-- Windows endpoint preparation
-- Universal Forwarder installation
-- Splunk Cloud forwarding configuration
-- Windows Security log ingestion
-- Initial SPL validation
-- Day 01 documentation
-- Day 02 documentation
+- Detection validation reports
 - Evidence collection
-```
-
-Upcoming:
-
-```text
-- Create the first Sigma detection rule
-- Create matching SPL queries
-- Test detection logic
-- Validate detection results
-- Analyze false positives
-- Map detections to MITRE ATT&CK
-- Complete final documentation
-```
+- Technical documentation
+- Reproducible investigation workflow
+- Quantified detection outcomes
 
 ---
 
-## Portfolio Value
+# Project Methodology
 
-This project demonstrates the ability to work beyond basic tool installation by showing the complete process of:
+A key principle of this project is:
 
-```text
-Collecting Logs
-      ↓
-Understanding Security Events
-      ↓
-Writing Detection Logic
-      ↓
-Testing in a SIEM
-      ↓
-Validating Results
-      ↓
-Improving Detections
-      ↓
-Documenting Findings
-```
+~~~text
+Do not write a detection first and search for evidence later.
 
-This workflow reflects important responsibilities commonly associated with:
+Analyze the telemetry first.
+Understand normal behavior.
+Establish a baseline.
+Define the detection logic.
+Validate it.
+Then document the result.
+~~~
+
+This approach is intended to reflect a practical detection engineering workflow rather than simply creating static SIEM queries.
+
+---
+
+# Project Status
+
+| Component | Status |
+|---|---|
+| Splunk Cloud Environment | Completed |
+| Windows Log Collection | Completed |
+| Windows Authentication Analysis | Completed |
+| Failed Logon Detection | Completed |
+| Repeated Failed Logon Detection | Completed |
+| Process Creation Analysis | Completed |
+| PowerShell Analysis | Completed |
+| Encoded PowerShell Detection | Completed |
+| Sigma Rules | Completed for current detections |
+| SPL Queries | Completed for current detections |
+| Validation Reports | Completed for current detections |
+| MITRE ATT&CK Mapping | Completed for current detections |
+| Evidence Documentation | Completed through Day 04 |
+| Detection Engineering Lab | In Progress |
+
+---
+
+# Portfolio Value
+
+This project demonstrates practical experience with a complete detection engineering lifecycle:
+
+~~~text
+Telemetry
+   ↓
+Analysis
+   ↓
+Baseline
+   ↓
+Detection Development
+   ↓
+Sigma
+   ↓
+SPL
+   ↓
+Validation
+   ↓
+MITRE ATT&CK
+   ↓
+Evidence
+   ↓
+Documentation
+~~~
+
+The project is designed to demonstrate skills relevant to entry-level:
 
 - SOC Analyst
 - SOC Analyst L1
-- Blue Team Analyst
-- Detection Engineering Intern
-- Cybersecurity Intern
-- Security Monitoring Analyst
+- Security Operations
+- Blue Team
+- Detection Engineering
+- Security Monitoring
+- SIEM Analyst
 
 ---
 
-## Author
+# Author
 
 **Ananthan D**
 
-B.Tech Information Technology Graduate  
-Cybersecurity and SOC Analyst Aspirant
+B.Tech — Information Technology
 
-### Profiles
+Cybersecurity | SOC | Blue Team | Detection Engineering
 
-- GitHub: [ananthancyber](https://github.com/ananthancyber)
-- LinkedIn: [Ananthan D](https://www.linkedin.com/in/ananthan-d-ab295321b)
+GitHub: `https://github.com/ananthancyber`
 
 ---
 
-## Disclaimer
+# License
 
-This project was created for educational and portfolio purposes in a controlled lab environment.
+This project is licensed under the MIT License.
 
-All testing activities are performed only on authorized systems and isolated virtual machines. No unauthorized systems, networks, or accounts are targeted.
-
----
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+See `LICENSE` for details.
