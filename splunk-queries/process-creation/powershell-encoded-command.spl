@@ -1,0 +1,5 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4688
+| search New_Process_Name="*powershell.exe" OR New_Process_Name="*pwsh.exe"
+| search Process_Command_Line="*-EncodedCommand*" OR Process_Command_Line="* -enc *"
+| table _time host Account_Name New_Process_Name Process_Command_Line Creator_Process_Name
+| sort - _time
