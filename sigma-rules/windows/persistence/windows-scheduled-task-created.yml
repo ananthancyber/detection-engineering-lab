@@ -1,0 +1,29 @@
+title: Windows Scheduled Task Created
+id: 4d7a9c53-4698-4e21-b804-004fa1ed0a04
+status: experimental
+description: Detects Windows scheduled task creation events using Security Event ID 4698.
+author: Ananthan D
+date: 2026/09/19
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4698
+
+  condition: selection
+
+level: medium
+
+falsepositives:
+  - Legitimate Windows scheduled tasks
+  - Windows Update tasks
+  - Enterprise software deployment
+  - Security management tools
+  - Administrative task creation
+
+tags:
+  - attack.persistence
+  - attack.t1053.005

@@ -1,0 +1,4 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4698
+| rex field=_raw "Task Name:\s+(?<ScheduledTaskName>[^\r\n]+)"
+| table _time host Account_Name ScheduledTaskName EventCode Message
+| sort - _time
