@@ -1,0 +1,5 @@
+index=main sourcetype="WinEventLog:Security" Logon_Type=3 (EventCode=4624 OR EventCode=4625)
+| stats count(eval(EventCode=4624)) as successful_logons count(eval(EventCode=4625)) as failed_logons earliest(eval(if(EventCode=4625,_time,null()))) as first_failed latest(eval(if(EventCode=4625,_time,null()))) as last_failed earliest(eval(if(EventCode=4624,_time,null()))) as first_success latest(eval(if(EventCode=4624,_time,null()))) as last_success by Source_Network_Address, Account_Name, Account_Domain, host
+| where failed_logons > 0 AND successful_logons > 0 AND first_failed < first_success
+| eval sequence="Failed authentication followed by successful authentication"
+| sort - first_success

@@ -1,0 +1,28 @@
+title: Failed Network Logon Followed by Successful Network Logon
+id: 5d8e7c41-4624-4f92-a105-005fa1ed0a05
+status: experimental
+description: Detects a failed Windows network logon followed by a successful network logon from the same source and account within a defined time window.
+author: Ananthan D
+date: 2026/09/20
+
+correlation:
+  type: temporal_ordered
+    rules:
+    - 61f2a8c3-4625-4b91-a201-006fa1ed0a06
+    - 72a3b9d4-4624-4c82-b312-007fa1ed0a07
+  group-by:
+    - Source_Network_Address
+    - Account_Name
+    - Account_Domain
+  timespan: 10m
+
+level: medium
+
+falsepositives:
+  - Users entering incorrect credentials before a successful login
+  - Automated authentication retries
+  - Administrative troubleshooting
+  - Legitimate service authentication failures
+
+tags:
+  - attack.lateral_movement

@@ -1,0 +1,29 @@
+title: Windows Successful Network Logon
+id: 72a3b9d4-4624-4c82-b312-007fa1ed0a07
+status: experimental
+description: Detects successful Windows network logon events using Security Event ID 4624 and Logon Type 3.
+author: Ananthan D
+date: 2026/09/20
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4624
+    LogonType: 3
+
+  condition: selection
+
+level: informational
+
+falsepositives:
+  - Normal network authentication
+  - Domain authentication
+  - Legitimate administrative activity
+  - Automated service authentication
+
+tags:
+  - attack.lateral_movement
+  - attack.t1078

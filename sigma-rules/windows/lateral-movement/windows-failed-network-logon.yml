@@ -1,0 +1,29 @@
+title: Windows Failed Network Logon
+id: 61f2a8c3-4625-4b91-a201-006fa1ed0a06
+status: experimental
+description: Detects Windows failed network logon events using Security Event ID 4625 and Logon Type 3.
+author: Ananthan D
+date: 2026/09/20
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4625
+    LogonType: 3
+
+  condition: selection
+
+level: low
+
+falsepositives:
+  - Users entering incorrect credentials
+  - Automated authentication retries
+  - Misconfigured services
+  - Administrative troubleshooting
+
+tags:
+  - attack.credential_access
+  - attack.t1078
