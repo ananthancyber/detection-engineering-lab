@@ -1,0 +1,29 @@
+title: Windows Local Administrator Group Membership Change
+id: 84b6c2d7-4732-4e91-a306-008fa1ed0a08
+status: experimental
+description: Detects a member being added to the local Administrators security group using Windows Security Event ID 4732.
+author: Ananthan D
+date: 2026/09/21
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4732
+    TargetUserName: Administrators
+  condition: selection
+
+level: high
+
+falsepositives:
+  - Legitimate administrative activity
+  - Software installation or configuration
+  - Endpoint management tools
+  - Help desk or IT administration
+
+tags:
+  - attack.persistence
+  - attack.privilege_escalation
+  - attack.t1098

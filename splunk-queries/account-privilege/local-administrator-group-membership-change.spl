@@ -1,0 +1,10 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4732
+| rex field=_raw "Account Name:\s+(?<SubjectAccount>[^\r\n]+)"
+| rex field=_raw "Account Domain:\s+(?<SubjectDomain>[^\r\n]+)"
+| rex field=_raw "Group Name:\s+(?<GroupName>[^\r\n]+)"
+| rex field=_raw "Group Domain:\s+(?<GroupDomain>[^\r\n]+)"
+| rex field=_raw "Member:\s+Security ID:\s+(?<MemberSID>[^\r\n]+)"
+| search GroupName="Administrators"
+| eval Detection="Local Administrator Group Membership Change"
+| table _time host SubjectAccount SubjectDomain GroupName GroupDomain MemberSID EventCode Detection
+| sort - _time
