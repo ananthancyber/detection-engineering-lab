@@ -1,0 +1,30 @@
+title: Windows Administrators Group Enumeration via Net1
+id: 95c7e3a1-4799-4f82-b407-009fa1ed0a09
+status: experimental
+description: Detects enumeration of the local Administrators security group through Windows Security Event ID 4799 when performed by net1.exe.
+author: Ananthan D
+date: 2026/09/22
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4799
+    TargetUserName: Administrators
+    Image|endswith: '\net1.exe'
+  condition: selection
+
+level: medium
+
+falsepositives:
+  - Legitimate administrative troubleshooting
+  - System administration
+  - IT support activity
+  - Endpoint management tools
+  - Security monitoring or assessment tools
+
+tags:
+  - attack.discovery
+  - attack.t1069.001

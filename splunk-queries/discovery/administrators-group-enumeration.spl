@@ -1,0 +1,9 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4799
+| rex field=_raw "Account Name:\s+(?<SubjectAccount>[^\r\n]+)"
+| rex field=_raw "Group Name:\s+(?<GroupName>[^\r\n]+)"
+| rex field=_raw "Group Domain:\s+(?<GroupDomain>[^\r\n]+)"
+| rex field=_raw "Process Name:\s+(?<ProcessName>[^\r\n]+)"
+| search ProcessName="*net1.exe" GroupName="Administrators"
+| eval Detection="Administrators Group Enumeration via net1.exe"
+| table _time host SubjectAccount GroupName GroupDomain ProcessName EventCode Detection
+| sort - _time
