@@ -1,0 +1,20 @@
+index=main sourcetype="WinEventLog:Security" (EventCode=4672 OR EventCode=4688)
+| rex field=_raw "Account Name:\s+(?<AccountName>[^\r\n]+)"
+| rex field=_raw "Logon ID:\s+(?<LogonID>0x[0-9A-Fa-f]+)"
+| rex field=_raw "New Process Name:\s+(?<ProcessName>[^\r\n]+)"
+| stats
+    earliest(eval(if(EventCode=4672,_time,null()))) as PrivilegeTime
+    earliest(eval(if(EventCode=4688 AND like(ProcessName,"%\\cmd.exe"),_time,null()))) as CmdTime
+    values(eval(if(EventCode=4672,AccountName,null()))) as PrivilegeAccount
+    values(eval(if(EventCode=4688 AND like(ProcessName,"%\\cmd.exe"),ProcessName,null()))) as CmdProcess
+    values(EventCode) as EventCodes
+    by host LogonID
+| where mvcount(EventCodes)=2
+| where PrivilegeAccount="Administrator"
+| where isnotnull(CmdTime)
+| eval TimeDifference=round(CmdTime-PrivilegeTime,2)
+| where TimeDifference >= 0 AND TimeDifference <= 900
+| eval Detection="Administrator Privileged Command Shell Execution"
+| convert ctime(PrivilegeTime) ctime(CmdTime)
+| table host LogonID PrivilegeAccount PrivilegeTime CmdTime TimeDifference CmdProcess Detection
+| sort - CmdTime

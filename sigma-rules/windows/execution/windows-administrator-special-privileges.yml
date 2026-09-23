@@ -1,0 +1,27 @@
+title: Windows Administrator Special Privileges Assigned
+id: b7e4c9a2-4672-4d81-a512-010fa1ed0a11
+status: experimental
+description: Detects Windows Security Event ID 4672 where special privileges are assigned to the Administrator account.
+author: Ananthan D
+date: 2026/09/23
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4672
+    SubjectUserName: Administrator
+  condition: selection
+
+level: medium
+
+falsepositives:
+  - Legitimate administrator logon
+  - IT administration
+  - Endpoint management
+  - System maintenance
+
+tags:
+  - attack.privilege_escalation
