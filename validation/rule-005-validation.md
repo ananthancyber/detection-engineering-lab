@@ -386,16 +386,15 @@ In this lab, the source context and authentication telemetry were examined befor
 
 ## 17. MITRE ATT&CK Mapping
 
-### T1078 — Valid Accounts
+### T1110 — Brute Force
 
-The detection can support investigation of potential valid-account abuse because an authentication sequence involving failed attempts followed by successful network authentication may warrant examination of whether valid credentials were subsequently used.
+The detection identifies a failed network authentication followed by a successful network authentication from the same source and account context within a defined time window.
 
-**MITRE ATT&CK Tactic:**
+This behavior is mapped to MITRE ATT&CK T1110 because repeated authentication failures followed by a successful authentication can represent a brute-force-related authentication pattern requiring further investigation.
 
-`Credential Access / Defense Evasion / Persistence / Privilege Escalation / Lateral Movement`
+The detection does not by itself establish malicious activity. Analysts should review the source, account, authentication context, timing, and surrounding activity before determining the cause.
 
-The detection itself does not prove valid-account abuse. It identifies an authentication pattern that can provide useful context for further investigation.
-
+**MITRE ATT&CK Tactic:** Credential Access
 ---
 
 ## 18. Evidence Register

@@ -7,7 +7,7 @@ date: 2026/09/20
 
 correlation:
   type: temporal_ordered
-    rules:
+  rules:
     - 61f2a8c3-4625-4b91-a201-006fa1ed0a06
     - 72a3b9d4-4624-4c82-b312-007fa1ed0a07
   group-by:
@@ -25,4 +25,5 @@ falsepositives:
   - Legitimate service authentication failures
 
 tags:
-  - attack.lateral_movement
+  - attack.credential_access
+  - attack.t1110

@@ -26,4 +26,4 @@ falsepositives:
 tags:
   - attack.persistence
   - attack.privilege_escalation
-  - attack.t1098
+  - attack.t1098.007

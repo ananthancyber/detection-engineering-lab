@@ -433,7 +433,7 @@ Useful contextual fields include:
 
 ## 16. MITRE ATT&CK Mapping
 
-### T1098 — Account Manipulation
+## T1098.007 — Account Manipulation: Additional Local or Domain Groups
 
 The detection supports investigation of account manipulation involving membership changes that can alter the effective privileges of an account.
 
@@ -498,4 +498,4 @@ The detection logic was then formalized as a Sigma rule for reusable detection e
 **Detected Events:** 1  
 **Detection Rate:** 100%  
 **Sigma Rule:** Rule 006  
-**MITRE ATT&CK:** T1098 — Account Manipulation
+**MITRE ATT&CK:** T1098.007 — Account Manipulation: Additional Local or Domain Groups

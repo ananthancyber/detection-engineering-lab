@@ -428,20 +428,15 @@ The detection therefore provides an actionable authentication correlation point 
 
 ## 19. MITRE ATT&CK Mapping
 
-### T1078 — Valid Accounts
+### T1110 — Brute Force
 
-Rule 005 can support investigation of potential valid-account abuse by identifying authentication activity where failed network authentication is followed by successful network authentication.
+The detection identifies a failed network authentication followed by a successful network authentication from the same source and account context within a defined time window.
 
-**Tactic relevance:**
+This behavior is mapped to MITRE ATT&CK T1110 because repeated authentication failures followed by a successful authentication can represent a brute-force-related authentication pattern requiring further investigation.
 
-- Credential Access
-- Defense Evasion
-- Persistence
-- Privilege Escalation
-- Lateral Movement
+The detection does not by itself establish malicious activity. Analysts should review the source, account, authentication context, timing, and surrounding activity before determining the cause.
 
-The detection identifies an authentication pattern and does not independently establish that valid-account abuse occurred.
-
+**MITRE ATT&CK Tactic:** Credential Access
 ---
 
 ## 20. Evidence Register
