@@ -1,12 +1,12 @@
 # Detection Engineering Lab
 
-**Building and validating Sigma detection rules against live Windows telemetry in Splunk Cloud — from log pipeline to MITRE ATT&CK-mapped, controlled-test-proven detections.**
+**Building, validating, and documenting Windows security detections using Splunk Cloud, Sigma, SPL, MITRE ATT&CK, controlled validation, and SOC investigation workflows.**
 
 [![Platform](https://img.shields.io/badge/Platform-Splunk%20Cloud-black?logo=splunk)](https://www.splunk.com/)
 [![Endpoint](https://img.shields.io/badge/Endpoint-Windows%2010-blue?logo=windows)](https://www.microsoft.com/windows)
-[![Detection Format](https://img.shields.io/badge/Detection-Sigma-orange)](https://sigmahq.io/)
+[![Detection](https://img.shields.io/badge/Detection-Sigma-orange)](https://sigmahq.io/)
 [![Framework](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-red)](https://attack.mitre.org/)
-[![Rules](https://img.shields.io/badge/Detections-7%20Validated-brightgreen)](#detection-coverage)
+[![Rules](https://img.shields.io/badge/Primary%20Detections-8-brightgreen)](#detection-coverage)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
 
 ---
@@ -15,14 +15,15 @@
 
 | | |
 |---|---|
-| **What it is** | A self-built SOC lab: Windows endpoint → Splunk Cloud → Sigma detections, each one proven against a controlled attack simulation |
-| **Detections shipped** | 7 validated rules (2 correlation-based, 5 event-based) across credential access, execution, persistence, lateral movement, privilege escalation, and discovery |
-| **MITRE ATT&CK coverage** | T1110, T1059.001, T1053.005, T1078, T1098.007, T1069.001 |
-| **Validation method** | Every rule: baseline → controlled attack → confirm detection fires → document false positives. Not "should detect" — **does detect**, with counts |
-| **Biggest number** | Scoped a 1,019-event noisy discovery baseline down to a single, process-specific, low-noise detection rule |
-| **Timeline** | 8 documented working days, each with narrative log, evidence screenshots, Sigma rule, SPL query, and validation report |
-
-**If you only read one thing:** every detection in this repo was validated by *causing the exact behavior it's supposed to catch* and confirming a 1:1 match — not assumed to work.
+| **What it is** | A self-built SOC and detection engineering laboratory focused on Windows security telemetry, Splunk Cloud, Sigma detection rules, SPL, MITRE ATT&CK, and controlled validation. |
+| **Primary detections** | **8 validated detection scenarios** covering authentication, execution, persistence, privilege activity, and discovery. |
+| **Sigma coverage** | **11 Sigma YAML files** including primary and supporting correlation rules. |
+| **Splunk coverage** | **8 SPL detection queries** for Windows Security telemetry. |
+| **Validation** | **8 dedicated validation reports** documenting telemetry, detection logic, results, and false-positive considerations. |
+| **MITRE ATT&CK coverage** | T1110, T1059.001, T1053.005, T1098.007, T1069.001, T1059.003 |
+| **Investigation workflow** | Alert triage → timeline reconstruction → process context → authentication context → analyst disposition. |
+| **Development approach** | Telemetry first → baseline → detection → controlled validation → evidence → MITRE mapping → quality review. |
+| **Project duration** | 12-day detection engineering roadmap, with Days 01–11 documented and Day 12 dedicated to final repository validation and portfolio polish. |
 
 ---
 
@@ -32,198 +33,682 @@
   - [30-Second Summary](#30-second-summary)
   - [Table of Contents](#table-of-contents)
   - [Why This Project](#why-this-project)
-  - [Detection Coverage](#detection-coverage)
-  - [How Every Rule Was Validated](#how-every-rule-was-validated)
-  - [Lab Environment](#lab-environment)
-  - [Repository Structure](#repository-structure)
-  - [Day-by-Day Build Log](#day-by-day-build-log)
-  - [Worked Example — Correlation Rule](#worked-example--correlation-rule)
-  - [Skills Demonstrated](#skills-demonstrated)
-  - [Author](#author)
-  - [Disclaimer](#disclaimer)
-  - [License](#license)
+- [Detection Engineering Methodology](#detection-engineering-methodology)
+- [Detection Coverage](#detection-coverage)
+- [MITRE ATT\&CK Coverage](#mitre-attck-coverage)
+- [Validation Approach](#validation-approach)
+- [SOC Investigation Workflow](#soc-investigation-workflow)
+- [Lab Environment](#lab-environment)
+    - [Technologies](#technologies)
+- [Repository Structure](#repository-structure)
+- [Day-by-Day Build Log](#day-by-day-build-log)
+- [Detection Engineering Highlights](#detection-engineering-highlights)
+  - [Authentication Detection](#authentication-detection)
+  - [PowerShell Detection](#powershell-detection)
+  - [Scheduled Task Detection](#scheduled-task-detection)
+  - [Network Authentication Correlation](#network-authentication-correlation)
+  - [Local Administrator Group Monitoring](#local-administrator-group-monitoring)
+  - [Windows Discovery](#windows-discovery)
+  - [Privileged Command Shell Correlation](#privileged-command-shell-correlation)
+- [Quality Review](#quality-review)
+    - [Rule 005](#rule-005)
+    - [Rule 006](#rule-006)
+- [Quantified Project Outcomes](#quantified-project-outcomes)
+- [Skills Demonstrated](#skills-demonstrated)
+    - [SIEM \& Detection Engineering](#siem--detection-engineering)
+    - [Windows Security Monitoring](#windows-security-monitoring)
+    - [Detection Engineering Practices](#detection-engineering-practices)
+    - [Threat Detection](#threat-detection)
+    - [SOC Operations](#soc-operations)
+    - [Documentation](#documentation)
+- [Portfolio Relevance](#portfolio-relevance)
+- [Author](#author)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ---
 
 ## Why This Project
 
-Most beginner SIEM projects stop at "I installed Splunk and ran a search." This one exists to answer the question a SOC hiring manager actually asks: **can this person go from a security event log to a working, tested detection rule, and know why it might be wrong?**
+Many beginner SIEM projects stop after installing a SIEM and searching through logs.
 
-Every rule here follows the same discipline a working detection engineer uses:
+This project focuses on the complete detection engineering workflow:
 
-1. Look at what telemetry actually exists — don't assume it.
-2. Baseline normal activity before writing a rule (a rule that fires on everything is useless).
-3. Generate the exact malicious behavior in a controlled way.
-4. Confirm the rule catches it — and only it.
-5. Write down the false positives, because every rule has them.
-6. Map to MITRE ATT&CK so the detection has language a SOC team already speaks.
+1. Identify the telemetry that actually exists.
+2. Establish a baseline of normal activity.
+3. Select a behavior that can be observed reliably.
+4. Develop the detection logic.
+5. Implement the detection in Sigma and SPL.
+6. Generate controlled activity in the laboratory.
+7. Verify that the expected telemetry is produced.
+8. Confirm that the detection identifies the behavior.
+9. Document false-positive considerations.
+10. Map the behavior to MITRE ATT&CK.
+11. Preserve screenshots and validation evidence.
+12. Review the detection for technical consistency.
 
-Twice during this project (Day 05, Day 07) the originally planned detection had to be **abandoned** because the required telemetry wasn't actually present in the environment. Both pivots are documented in the day logs rather than hidden — that's a more useful signal of real engineering judgment than a repo where everything went according to plan.
+The project deliberately documents telemetry-driven pivots.
 
----
+For example, the originally planned registry-based persistence detection was not retained when the required registry telemetry was unavailable. The project instead pivoted to Windows Scheduled Task Creation using Event ID 4698.
 
-## Detection Coverage
+Similarly, the Day 9 correlation scenario was selected after testing candidate telemetry paths and choosing a correlation that could be reliably validated in the environment.
 
-| # | Detection | Event ID(s) | MITRE ATT&CK | Type | Validated Result |
-|---|---|---|---|---|---|
-| 001 | Windows Failed Logon Attempt | 4625 | T1110 — Brute Force | Event | 36 events analyzed, detection confirmed |
-| 002 | Multiple Failed Logons (5+ in 5 min) | 4625 | T1110 — Brute Force | Correlation | 3/3 correlation windows correctly matched |
-| 003 | PowerShell Encoded Command Execution | 4688 | T1059.001 — PowerShell | Event | 402 PowerShell events baselined → 1/1 controlled detection |
-| 004 | Windows Scheduled Task Created | 4698 | T1053.005 — Scheduled Task | Event | 1/1 controlled detection, 100% rate |
-| 005 | Failed → Successful Network Logon Sequence | 4624 + 4625 | T1078 — Valid Accounts | Correlation | 62 events evaluated → 2 matching sequences found |
-| 006 | Local Administrator Group Membership Change | 4732 | T1098.007 — Account Manipulation | Event | SID-correlated, 1/1 controlled detection |
-| 007 | Administrators Group Enumeration via `net1.exe` | 4799 | T1069.001 — Permission Groups Discovery | Event (process-scoped) | 1,019-event baseline scoped to 1 precise match |
-
-Every row links to a real Sigma rule, a real SPL query, and a real validation report with quantified results — see [Repository Structure](#repository-structure).
+This approach reflects practical detection engineering: **build from observable telemetry rather than assuming that a data source exists.**
 
 ---
 
-## How Every Rule Was Validated
+# Detection Engineering Methodology
 
-```
+The project follows this workflow:
+
+~~~text
 Windows Security Telemetry
         ↓
-Baseline: what's normal, what's noisy
+Telemetry Availability Check
         ↓
-Sigma Rule + Matching SPL Query
+Baseline Analysis
         ↓
-Controlled Attack Simulation (generate the exact behavior)
+Detection Design
         ↓
-Confirm Detection Fires — 1:1
+Sigma Rule
         ↓
-Document False Positives
+Splunk SPL
         ↓
-Map to MITRE ATT&CK
+Controlled Validation
         ↓
-Capture Evidence
-```
+Detection Result
+        ↓
+False-Positive Review
+        ↓
+MITRE ATT&CK Mapping
+        ↓
+Evidence Documentation
+        ↓
+Detection Quality Review
+~~~
 
-This is not a design diagram — it's the literal sequence followed on all 8 days, with a validation report to prove each step for each rule.
+The goal is not simply to write a rule.
+
+The goal is to demonstrate that the rule is:
+
+- Based on available telemetry
+- Reproducible
+- Testable
+- Documented
+- Mapped to an appropriate ATT&CK technique
+- Considered in the context of legitimate activity
 
 ---
 
-## Lab Environment
+# Detection Coverage
+
+| Rule | Detection | Event ID(s) | Detection Type | MITRE ATT&CK | Result |
+|---|---|---|---|---|---|
+| **001** | Windows Failed Logon Attempt | 4625 | Event | T1110 — Brute Force | 36 events analyzed |
+| **002** | Multiple Failed Logons | 4625 | Correlation | T1110 — Brute Force | 3 matching 5-minute windows |
+| **003** | PowerShell Encoded Command Execution | 4688 | Process / Command Line | T1059.001 — PowerShell | 1/1 controlled detection |
+| **004** | Windows Scheduled Task Creation | 4698 | Persistence Event | T1053.005 — Scheduled Task | 1/1 controlled detection |
+| **005** | Failed Network Logon → Successful Network Logon | 4625, 4624 | Temporal Correlation | T1110 — Brute Force | 62 events evaluated, 2 matching sequences |
+| **006** | Local Administrator Group Membership Change | 4732 | Account / Privilege Activity | T1098.007 — Additional Local or Domain Groups | 1/1 controlled detection |
+| **007** | Administrators Group Enumeration via `net1.exe` | 4799 | Process-Scoped Discovery | T1069.001 — Local Groups | 1 precise detection |
+| **008** | Administrator Privileged Command Shell Execution | 4672, 4688 | Multi-Event Correlation | T1059.003 — Windows Command Shell | Controlled correlation validated |
+
+Each primary detection is represented by corresponding repository artifacts:
+
+- Sigma rule(s)
+- SPL query
+- Validation report
+- MITRE coverage documentation
+- Evidence screenshots where applicable
+
+---
+
+# MITRE ATT&CK Coverage
+
+The project currently covers six MITRE ATT&CK techniques/sub-techniques.
+
+| ATT&CK ID | Technique | Tactic | Detection |
+|---|---|---|---|
+| **T1110** | Brute Force | Credential Access | Rules 001, 002, 005 |
+| **T1059.001** | Command and Scripting Interpreter: PowerShell | Execution | Rule 003 |
+| **T1053.005** | Scheduled Task/Job: Scheduled Task | Persistence | Rule 004 |
+| **T1098.007** | Account Manipulation: Additional Local or Domain Groups | Persistence / Privilege Escalation | Rule 006 |
+| **T1069.001** | Permission Groups Discovery: Local Groups | Discovery | Rule 007 |
+| **T1059.003** | Command and Scripting Interpreter: Windows Command Shell | Execution | Rule 008 |
+
+The project-wide ATT&CK analysis is documented in:
+
+[`mitre-coverage/project-mitre-coverage.md`](mitre-coverage/project-mitre-coverage.md)
+
+Day-specific ATT&CK documentation is available in:
+
+[`mitre-coverage/`](mitre-coverage/)
+
+---
+
+# Validation Approach
+
+Validation was performed using a combination of:
+
+- Baseline analysis
+- Existing Windows Security telemetry
+- Controlled benign activity
+- Event correlation
+- Splunk search results
+- Raw event inspection
+- Field extraction
+- Screenshot evidence
+- Validation reports
+
+The validation philosophy is:
+
+~~~text
+Baseline
+   ↓
+Generate Controlled Activity
+   ↓
+Observe Windows Event
+   ↓
+Run Detection
+   ↓
+Verify Expected Match
+   ↓
+Record Result
+   ↓
+Document False Positives
+~~~
+
+The repository contains eight dedicated validation reports:
+
+~~~text
+validation/
+├── rule-001-validation.md
+├── rule-002-validation.md
+├── rule-003-validation.md
+├── rule-004-validation.md
+├── rule-005-validation.md
+├── rule-006-validation.md
+├── rule-007-validation.md
+└── rule-008-validation.md
+~~~
+
+Not every detection represents the same type of validation.
+
+Some rules use controlled 1:1 validation, while others rely on baseline and correlation analysis. The validation reports document the specific evidence and methodology used for each rule.
+
+---
+
+# SOC Investigation Workflow
+
+Day 10 demonstrates how an alert generated by the detection engineering pipeline can be investigated as a SOC analyst.
+
+The investigation used Rule 008 as the existing detection and followed:
+
+~~~text
+Alert
+ ↓
+Initial Triage
+ ↓
+Logon ID Identification
+ ↓
+Timeline Reconstruction
+ ↓
+Process Context
+ ↓
+Authentication Context
+ ↓
+Evidence Correlation
+ ↓
+Analyst Disposition
+~~~
+
+The investigation correlated:
+
+- Windows Security Event ID 4672
+- Windows Security Event ID 4688
+- Administrator account context
+- Windows Logon ID
+- `cmd.exe` process creation
+- Authentication context
+- Process timeline
+
+The controlled activity was documented as a benign validation scenario.
+
+Documentation:
+
+[`docs/Day10.md`](docs/Day10.md)
+
+---
+
+# Lab Environment
 
 | Component | Details |
 |---|---|
-| Host Operating System | Windows 11 |
-| Monitored Endpoint | Windows 10 Client VM (`WIN10-CLIENT`) |
-| Domain | `CORP` / `CORP.LOCAL` |
-| SIEM Platform | Splunk Cloud |
-| Log Collection Agent | Splunk Universal Forwarder 10.4.3 |
-| Log Source | Windows Security Event Log |
-| Splunk Index / Sourcetype | `main` / `WinEventLog:Security` |
-| Forwarding | Port `9997` over SSL |
-| Detection Format | Sigma (event + correlation rules) |
-| Query Language | Splunk Processing Language (SPL) |
-| Framework | MITRE ATT&CK |
+| **Host OS** | Windows 11 |
+| **Monitored Endpoint** | Windows 10 Client VM (`WIN10-CLIENT`) |
+| **Domain** | `CORP` / `CORP.LOCAL` |
+| **SIEM** | Splunk Cloud |
+| **Log Collection** | Splunk Universal Forwarder |
+| **Log Source** | Windows Security Event Log |
+| **Splunk Index** | `main` |
+| **Sourcetype** | `WinEventLog:Security` |
+| **Detection Format** | Sigma |
+| **Query Language** | Splunk Processing Language (SPL) |
+| **Framework** | MITRE ATT&CK |
 
-**Tools:** Splunk Cloud · Splunk Universal Forwarder · Sigma · SPL (`rex`, `stats`, `eval`, correlation) · MITRE ATT&CK · PowerShell / `net` commands for controlled simulation · Git/GitHub
+### Technologies
+
+- Splunk Cloud
+- Splunk Universal Forwarder
+- Sigma
+- Splunk SPL
+- Windows Security Event Logs
+- PowerShell
+- Windows command shell
+- Git
+- GitHub
+- MITRE ATT&CK
 
 ---
 
-## Repository Structure
+# Repository Structure
 
-```
-detection-engineering-lab/
+~~~text
+Project-04-Detection-Engineering-Lab/
 │
-├── docs/                    Day-by-day build logs (Day01–Day08)
+├── docs/
+│   ├── Day01.md
+│   ├── Day02.md
+│   ├── Day03.md
+│   ├── Day04.md
+│   ├── Day05.md
+│   ├── Day06.md
+│   ├── Day07.md
+│   ├── Day08.md
+│   ├── Day09.md
+│   ├── Day10.md
+│   └── Day11.md
 │
-├── sigma-rules/windows/
-│   ├── credential-access/   Failed logon, repeated failed logon
-│   ├── execution/           PowerShell encoded command
-│   ├── persistence/         Scheduled task creation
-│   ├── lateral-movement/    Network logon + failed→success correlation
-│   ├── account-privilege/   Local admin group membership change
-│   └── discovery/           Administrators group enumeration
+├── sigma-rules/
+│   └── windows/
+│       ├── account-privilege/
+│       ├── credential-access/
+│       ├── discovery/
+│       ├── execution/
+│       ├── lateral-movement/
+│       └── persistence/
 │
-├── splunk-queries/          One SPL file per detection, mirrors sigma-rules/
+├── splunk-queries/
+│   ├── account-privilege/
+│   ├── authentication/
+│   ├── correlation/
+│   ├── discovery/
+│   ├── persistence/
+│   └── process-creation/
 │
-├── mitre-coverage/          Full ATT&CK-mapped writeup per detection day
+├── mitre-coverage/
+│   ├── day03-authentication-detections.md
+│   ├── day04-process-creation-detection.md
+│   ├── day05-scheduled-task-detection.md
+│   ├── day06-network-authentication-detection.md
+│   ├── day07-account-privilege-detection.md
+│   ├── day08-windows-discovery-detection.md
+│   ├── day09-privileged-command-shell-detection.md
+│   └── project-mitre-coverage.md
 │
-├── validation/              rule-001 → rule-007, each with quantified pass/fail results
+├── validation/
+│   ├── rule-001-validation.md
+│   ├── rule-002-validation.md
+│   ├── rule-003-validation.md
+│   ├── rule-004-validation.md
+│   ├── rule-005-validation.md
+│   ├── rule-006-validation.md
+│   ├── rule-007-validation.md
+│   └── rule-008-validation.md
 │
-├── screenshots/             Evidence, organized by day
+├── screenshots/
+│   ├── Day01/
+│   ├── Day02/
+│   ├── Day03/
+│   ├── Day04/
+│   ├── Day05/
+│   ├── Day06/
+│   ├── Day07/
+│   ├── Day08/
+│   ├── Day09/
+│   └── Day10/
 │
 ├── LICENSE
 └── README.md
-```
+~~~
 
 ---
 
-## Day-by-Day Build Log
+# Day-by-Day Build Log
 
 | Day | Focus | Key Result |
 |---|---|---|
-| 01–02 | SIEM foundation | Splunk Cloud + Universal Forwarder live; 4624/4625/4688 confirmed indexed |
-| 03 | Authentication detection | Rules 001–002 — failed logon + 5-in-5-min correlation |
-| 04 | Process creation / PowerShell | 11,956 events baselined → Rule 003, 1/1 controlled detection |
-| 05 | Persistence | Pivoted from registry (telemetry unavailable) to scheduled tasks → Rule 004 |
-| 06 | Network authentication correlation | Rule 005 — temporal correlation across 62 events, 2 matches found |
-| 07 | Account & privilege | Rule 006 — SID-correlated Administrators group change detection |
-| 08 | Discovery | 1,019-event noisy baseline scoped to Rule 007, precision over recall |
+| **01** | Lab and Splunk foundation | Detection engineering environment established |
+| **02** | Windows telemetry and ingestion | Windows Security telemetry confirmed in Splunk |
+| **03** | Authentication detection | Rules 001–002: failed logon and repeated failed logon correlation |
+| **04** | Process creation / PowerShell | Rule 003: encoded PowerShell command detection |
+| **05** | Persistence | Telemetry assessment followed by pivot to scheduled-task detection; Rule 004 |
+| **06** | Network authentication | Rule 005: failed → successful network authentication correlation |
+| **07** | Account and privilege activity | Rule 006: local Administrators group membership change |
+| **08** | Windows discovery | Rule 007: Administrators group enumeration via `net1.exe` |
+| **09** | Advanced correlation | Rule 008: Administrator privileged session → `cmd.exe` execution |
+| **10** | SOC investigation workflow | Alert triage, timeline, process context, authentication context, disposition |
+| **11** | MITRE coverage and quality review | Project-wide ATT&CK review, mapping corrections, Sigma consistency review |
+| **12** | Final validation and portfolio polish | Final repository and README quality review |
 
-Full detail for each day: [`docs/Day01.md`](docs/Day01.md) → [`docs/Day08.md`](docs/Day08.md) · Full MITRE writeups: [`mitre-coverage/`](mitre-coverage/) · Full validation data: [`validation/`](validation/)
+Detailed documentation:
 
----
-
-## Worked Example — Correlation Rule
-
-**Rule 002 — Multiple Failed Logon Attempts (5+ in 5 minutes)**
-
-```yaml
-title: Multiple Windows Failed Logon Attempts
-id: 8a4e2f31-4625-4b7d-9c20-002fa1ed0a02
-status: experimental
-correlation:
-  type: event_count
-  rules:
-    - 7f2c9d1e-4625-4a6b-9f31-001fa1ed0a01
-  group-by:
-    - Source_Network_Address
-  timespan: 5m
-  condition:
-    gte: 5
-level: medium
-tags:
-  - attack.credential_access
-  - attack.t1110
-```
-
-```spl
-index=main sourcetype="WinEventLog:Security" EventCode=4625
-| bin _time span=5m
-| stats count dc(Account_Name) as unique_accounts values(Account_Name) as targeted_accounts values(Logon_Type) as logon_types by _time, Source_Network_Address, host
-| where count >= 5
-| sort - count
-```
-
-**Validated result:** 3 matching 5-minute windows, 8–10 failed logons each. The source resolved to the loopback interface — correctly flagged as "activity requiring investigation," **not** auto-classified as a confirmed attack. That distinction is documented in [`validation/rule-002-validation.md`](validation/rule-002-validation.md) and is exactly the kind of judgment call a SOC analyst has to make on every real alert.
+[`docs/`](docs/)
 
 ---
 
-## Skills Demonstrated
+# Detection Engineering Highlights
 
-`SIEM pipeline setup` · `Sigma rule authoring (event + correlation)` · `SPL development & field extraction` · `Controlled attack simulation` · `Telemetry-driven scoping` · `False-positive analysis & tuning` · `SID-based identity correlation` · `MITRE ATT&CK mapping` · `Evidence-based technical documentation`
+## Authentication Detection
 
-Maps directly to: **SOC Analyst L1** · **Detection Engineering Intern** · **Blue Team Analyst** · **Security Monitoring Analyst**
+Windows Event ID 4625 was analyzed for failed authentication activity.
+
+The project includes both:
+
+- Single failed-logon detection
+- Repeated failed-logon correlation
+
+The repeated failed-logon rule uses a five-minute event-count correlation.
 
 ---
 
-## Author
+## PowerShell Detection
+
+Windows Event ID 4688 was used to analyze process creation.
+
+A controlled PowerShell encoded-command test generated the expected process-creation telemetry.
+
+The detection is mapped to:
+
+~~~text
+T1059.001 — Command and Scripting Interpreter: PowerShell
+~~~
+
+---
+
+## Scheduled Task Detection
+
+Registry-based persistence was initially investigated.
+
+The required registry telemetry was not available in the environment, so the detection strategy was changed to Windows Scheduled Task Creation using Event ID 4698.
+
+This resulted in a validated scheduled-task detection mapped to:
+
+~~~text
+T1053.005 — Scheduled Task/Job: Scheduled Task
+~~~
+
+---
+
+## Network Authentication Correlation
+
+Rule 005 correlates:
+
+~~~text
+Failed Network Authentication
+        ↓
+Successful Network Authentication
+~~~
+
+The detection evaluates the authentication sequence using Windows Security Events 4625 and 4624.
+
+The project deliberately avoids treating this sequence alone as proof of malicious activity.
+
+---
+
+## Local Administrator Group Monitoring
+
+Rule 006 monitors Event ID 4732 for additions to the local `Administrators` group.
+
+The controlled test account's SID was correlated against the Windows local-account information to validate the identity represented by the event.
+
+The detection is mapped to:
+
+~~~text
+T1098.007 — Account Manipulation:
+Additional Local or Domain Groups
+~~~
+
+---
+
+## Windows Discovery
+
+Rule 007 focuses on Administrators group enumeration associated with:
+
+~~~text
+Event ID 4799
++
+Administrators
++
+net1.exe
+~~~
+
+A 1,019-event discovery baseline was analyzed before narrowing the detection to the more specific process context.
+
+---
+
+## Privileged Command Shell Correlation
+
+Rule 008 correlates:
+
+~~~text
+Event ID 4672
+Administrator Special Privileges
+        ↓
+Same Logon ID
+        ↓
+Event ID 4688
+cmd.exe Execution
+~~~
+
+The production correlation uses a 15-minute window and is mapped to:
+
+~~~text
+T1059.003 — Command and Scripting Interpreter:
+Windows Command Shell
+~~~
+
+---
+
+# Quality Review
+
+Day 11 performed a project-wide detection quality review.
+
+The review covered:
+
+- Sigma rule structure
+- Correlation logic
+- MITRE mappings
+- Severity
+- False-positive considerations
+- Validation reports
+- SPL implementation
+- Cross-document consistency
+
+Two important mapping refinements were made.
+
+### Rule 005
+
+The primary failed-to-successful network authentication correlation was refined to:
+
+~~~text
+T1110 — Brute Force
+~~~
+
+The detection is treated as an investigation signal rather than proof of credential compromise, lateral movement, or malicious activity.
+
+### Rule 006
+
+The broader T1098 mapping was refined to:
+
+~~~text
+T1098.007 — Account Manipulation:
+Additional Local or Domain Groups
+~~~
+
+These changes were synchronized across the relevant Sigma, validation, and MITRE documentation.
+
+---
+
+# Quantified Project Outcomes
+
+| Metric | Result |
+|---|---:|
+| **Primary detection scenarios** | 8 |
+| **Sigma YAML files** | 11 |
+| **Splunk SPL queries** | 8 |
+| **Validation reports** | 8 |
+| **Day-by-day documentation** | 11 |
+| **Day-level MITRE documents** | 7 |
+| **Project-wide MITRE document** | 1 |
+| **MITRE techniques/sub-techniques** | 6 |
+| **Detection-focused days** | 7 |
+| **SOC investigation workflow days** | 1 |
+| **Highest detection severity** | High |
+| **Primary technologies** | Splunk, Sigma, Windows Security Logs, MITRE ATT&CK |
+
+The repository contains both event-based and correlation-based detection engineering examples.
+
+---
+
+# Skills Demonstrated
+
+### SIEM & Detection Engineering
+
+- Splunk Cloud
+- Splunk SPL
+- Windows Security Event Log analysis
+- Sigma rule authoring
+- Event-based detection
+- Correlation-based detection
+- Field extraction using `rex`
+- Statistical correlation using `stats`
+- Detection filtering and tuning
+
+### Windows Security Monitoring
+
+- Authentication events
+- Process creation
+- PowerShell activity
+- Scheduled task creation
+- Privileged account activity
+- Local group membership changes
+- Permission group discovery
+- Command-shell execution
+
+### Detection Engineering Practices
+
+- Telemetry validation
+- Baseline analysis
+- Detection scoping
+- Controlled validation
+- False-positive analysis
+- Correlation logic
+- Evidence collection
+- Detection quality review
+
+### Threat Detection
+
+- MITRE ATT&CK mapping
+- Credential access detection
+- Execution detection
+- Persistence detection
+- Privilege escalation monitoring
+- Discovery detection
+
+### SOC Operations
+
+- Alert triage
+- Timeline reconstruction
+- Process context analysis
+- Authentication context analysis
+- Evidence correlation
+- Analyst disposition
+- Investigation documentation
+
+### Documentation
+
+- Technical documentation
+- Validation reporting
+- Evidence management
+- Repository organization
+- Detection-to-MITRE mapping
+- Recruiter-facing project presentation
+
+---
+
+# Portfolio Relevance
+
+This project demonstrates practical experience across the detection engineering lifecycle rather than only theoretical knowledge.
+
+It provides evidence of experience with:
+
+**SOC Monitoring**
+
+→ Windows security telemetry
+→ Authentication monitoring
+→ Process monitoring
+→ Alert investigation
+
+**Detection Engineering**
+
+→ Sigma
+→ SPL
+→ Event detection
+→ Correlation detection
+→ Detection tuning
+
+**Threat Detection**
+
+→ MITRE ATT&CK
+→ Credential Access
+→ Execution
+→ Persistence
+→ Privilege Escalation
+→ Discovery
+
+**SOC Investigation**
+
+→ Alert triage
+→ Timeline reconstruction
+→ Process context
+→ Authentication context
+→ Evidence-based disposition
+
+---
+
+# Author
 
 **Ananthan D**
-B.Tech Information Technology Graduate — Cybersecurity & SOC Analyst Aspirant
+
+B.Tech Information Technology Graduate
+Cybersecurity & SOC Analyst Aspirant
 
 - GitHub: [ananthancyber](https://github.com/ananthancyber)
 - LinkedIn: [Ananthan D](https://www.linkedin.com/in/ananthan-d-ab295321b)
 
 ---
 
-## Disclaimer
+# Disclaimer
 
-Educational, portfolio-purpose project in a controlled lab environment. All simulated attack activity (failed logons, encoded PowerShell, scheduled tasks, privilege changes, discovery commands) was performed only against an isolated, authorized Windows 10 VM owned by the author. No unauthorized systems, networks, or accounts were targeted.
+This is an educational portfolio project conducted in a controlled and authorized laboratory environment.
 
-## License
+All simulated activity was performed against laboratory systems used for the project. No unauthorized systems, networks, accounts, or third-party environments were targeted.
 
-MIT License — see [LICENSE](LICENSE).
+Detection results represent the telemetry and configuration available within this laboratory environment.
+
+---
+
+# License
+
+MIT License — see [`LICENSE`](LICENSE).
